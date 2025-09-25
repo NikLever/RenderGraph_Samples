@@ -1,109 +1,171 @@
-using System;
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering.RenderGraphModule;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
-using UnityEngine.Rendering.RenderGraphModule;
 
-public class DevRenderFeature : ScriptableRendererFeature
+
+// This RendererFeature shows how a compute shader can be used together with RenderGraph.
+
+// What this example doesn't show is that it can run together with render passes. If the
+// compute shader is using resources which are also used by render passes then a dependency
+// between the passes are created as they would have done for two render passes.
+public class DevRendererFeature : ScriptableRendererFeature
 {
-    [SerializeField] DevRenderFeatureSettings settings;
-    DevRenderFeaturePass m_ScriptablePass;
+    // We will treat the compute pass as a normal Scriptable Render Pass.
+    class DevPass : ScriptableRenderPass
+    {
+        // Compute shader.
+        ComputeShader m_ComputeShader;
 
-    // Override this property to declare the feature's dependency on an intermediate texture.
-    // This allows the renderer to optimize its setup by skipping this feature early if it's incompatible with
-    // the pipeline's Intermediate Texture setting (when set to 'Never').
-    //
-    // - Set to `Required`: If your feature's passes require an intermediate texture (for example, for color or depth input).
-    // - Set to `NotRequired`: For a small performance boost, if you are certain the feature does not need an intermediate texture.
-    // - Default (`Unknown`): This is a safe fallback, but the renderer might do unnecessary work before discovering an incompatibility.
-    //
-    // Note: URP still validates the usage in the Editor and in Development builds, even if this is set to `No`.
-    // protected override IntermediateTextureUsage useIntermediateTextures => IntermediateTextureUsage.Required;
+        // Compute buffers.
+        BufferHandle m_InputBuffer;
+        BufferHandle m_OutputBuffer;
+
+        // Input data for the compute shader.
+        private List<int> inputData = new List<int>();
+
+        // Constructor is used to initialize the input data.
+        public DevPass()
+        {
+            for (int i = 0; i < 20; i++)
+            {
+                inputData.Add(i);
+            }
+        }
+
+        // Setup function to transfer the compute shader from the renderer feature to
+        // the render pass.
+        public void Setup(ComputeShader cs)
+        {
+            m_ComputeShader = cs;
+        }
+
+        // PassData is used to pass data when recording to the execution of the pass.
+        class PassData
+        {
+            // Compute shader.
+            public ComputeShader cs;
+            
+            // Buffer handles for the compute buffers.
+            public BufferHandle input;
+            public BufferHandle output;
+            public List<int> bufferData;
+        }
+
+        // ReadbackPassData is used to read data asynchronously from the specified bufferHandle.
+        class ReadbackPassData
+        {
+            public BufferHandle bufferHandle;
+        }
+
+        // Records a render graph render pass which blits the BlitData's active texture back to the camera's color attachment.
+        public override void RecordRenderGraph(RenderGraph renderGraph, ContextContainer frameData)
+        {
+            /*// Create buffers
+            var bufferDesc = new BufferDesc()
+            {
+                name = "InputBuffer",
+                count = 20,
+                stride = sizeof(int),
+                target = GraphicsBuffer.Target.Structured
+            };
+            m_InputBuffer = renderGraph.CreateBuffer(bufferDesc);
+            
+            bufferDesc.name = "OutputBuffer";
+            m_OutputBuffer = renderGraph.CreateBuffer(bufferDesc);*/
+
+            // Starts the recording of the render graph pass given the name of the pass
+            // and outputting the data used to pass data to the execution of the render function.
+            // Notice that we use "AddComputePass" when we are working with compute.
+            using (var builder = renderGraph.AddComputePass("DevPass", out PassData passData))
+            {
+                builder.AllowPassCulling(false);
+                
+                // Set the pass data so the data can be transferred from the recording to the execution.
+                passData.cs = m_ComputeShader;
+                passData.input = m_InputBuffer;
+                passData.output = m_OutputBuffer;
+                passData.bufferData = inputData;
+                
+                // UseBuffer is used to set up render graph dependencies together with read and write flags.
+                builder.UseBuffer(passData.input, AccessFlags.Read);
+                builder.UseBuffer(passData.output, AccessFlags.Write);
+                
+                // The execution function is also called SetRenderFunc for compute passes.
+                builder.SetRenderFunc(static (PassData data, ComputeGraphContext cgContext) => ExecutePass(data, cgContext));
+            }
+
+            // Because our BufferHandles are managed by the render graph, we don't have access to the data when the
+            // RenderGraph is done executing. We need to add a pass to read from the output buffer if we want to
+            // use the output data from the compute shader.
+            using (var builder = renderGraph.AddUnsafePass<ReadbackPassData>("ReadbackPass", out var passData))
+            {
+                builder.AllowPassCulling(false);
+
+                // Which buffer to read from
+                passData.bufferHandle = m_OutputBuffer;
+                builder.UseBuffer(passData.bufferHandle, AccessFlags.Read);
+                builder.SetRenderFunc(static (ReadbackPassData data, UnsafeGraphContext ctx) =>
+                {
+                    ctx.cmd.RequestAsyncReadback(data.bufferHandle, (AsyncGPUReadbackRequest request) =>
+                    {
+                        var result = request.GetData<int>();
+                        Debug.Log(string.Join(",", result));
+                    });
+                });
+            }
+        }
+
+        // ExecutePass is the render function set in the render graph recordings.
+        // This is good practice to avoid using variables outside of the lambda it is called from.
+        // It is static to avoid using member variables which could cause unintended behaviour.
+        static void ExecutePass(PassData data, ComputeGraphContext cgContext)
+        {
+            // Attaches the compute buffers.
+            cgContext.cmd.SetBufferData(data.input, data.bufferData);
+            cgContext.cmd.SetComputeBufferParam(data.cs, data.cs.FindKernel("CSMain"), "inputData", data.input);
+            cgContext.cmd.SetComputeBufferParam(data.cs, data.cs.FindKernel("CSMain"), "outputData", data.output);
+            // Dispatches the compute shader with a given kernel as entrypoint.
+            // The amount of thread groups determines how many groups to execute of the kernel.
+            cgContext.cmd.DispatchCompute(data.cs, data.cs.FindKernel("CSMain"), 1, 1, 1);
+        }
+    }
+
+    [SerializeField]
+    ComputeShader computeShader;
+    DevPass m_ComputePass;
 
     /// <inheritdoc/>
     public override void Create()
     {
-        m_ScriptablePass = new DevRenderFeaturePass(settings);
-
-        // Configures where the render pass should be injected.
-        m_ScriptablePass.renderPassEvent = RenderPassEvent.AfterRenderingOpaques;
-
-        // You can request URP color texture and depth buffer as inputs by uncommenting the line below,
-        // URP will ensure copies of these resources are available for sampling before executing the render pass.
-        // Only uncomment it if necessary, it will have a performance impact, especially on mobiles and other TBDR GPUs where it will break render passes.
-        //m_ScriptablePass.ConfigureInput(ScriptableRenderPassInput.Color | ScriptableRenderPassInput.Depth);
-
-        // You can request URP to render to an intermediate texture by uncommenting the line below.
-        // Use this option for passes that do not support rendering directly to the backbuffer.
-        // Only uncomment it if necessary, it will have a performance impact, especially on mobiles and other TBDR GPUs where it will break render passes.
-        //m_ScriptablePass.requiresIntermediateTexture = true;
+        // Initialize the compute pass.
+        m_ComputePass = new DevPass();
+        // Sets the renderer feature to execute before rendering.
+        m_ComputePass.renderPassEvent = RenderPassEvent.BeforeRendering;
     }
 
     // Here you can inject one or multiple render passes in the renderer.
     // This method is called when setting up the renderer once per-camera.
     public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
     {
-        renderer.EnqueuePass(m_ScriptablePass);
-    }
-
-    // Use this class to pass around settings from the feature to the pass
-    [Serializable]
-    public class DevRenderFeatureSettings
-    {
-        
-    }
-
-    class DevRenderFeaturePass : ScriptableRenderPass
-    {
-        readonly DevRenderFeatureSettings settings;
-
-        public DevRenderFeaturePass(DevRenderFeatureSettings settings)
+        // Check if the system supports compute shaders, if not make an early exit.
+        if (!SystemInfo.supportsComputeShaders)
         {
-            this.settings = settings;
+            Debug.LogWarning("Device does not support compute shaders. The pass will be skipped.");
+            return;
         }
-
-        // This class stores the data needed by the RenderGraph pass.
-        // It is passed as a parameter to the delegate function that executes the RenderGraph pass.
-        private class PassData
+        // Skip the render pass if the compute shader is null.
+        if (computeShader == null)
         {
-            
+            Debug.LogWarning("The compute shader is null. The pass will be skipped.");
+            return;
         }
-
-        // This static method is passed as the RenderFunc delegate to the RenderGraph render pass.
-        // It is used to execute draw commands.
-        static void ExecutePass(PassData data, RasterGraphContext context)
-        {
-            
-        }
-
-        // RecordRenderGraph is where the RenderGraph handle can be accessed, through which render passes can be added to the graph.
-        // FrameData is a context container through which URP resources can be accessed and managed.
-        public override void RecordRenderGraph(RenderGraph renderGraph, ContextContainer frameData)
-        {
-            const string passName = "Render Custom Pass";
-
-            // This adds a raster render pass to the graph, specifying the name and the data type that will be passed to the ExecutePass function.
-            using (var builder = renderGraph.AddRasterRenderPass<PassData>(passName, out var passData))
-            {
-                // Use this scope to set the required inputs and outputs of the pass and to
-                // setup the passData with the required properties needed at pass execution time.
-
-                // Make use of frameData to access resources and camera data through the dedicated containers.
-                // Eg:
-                // UniversalCameraData cameraData = frameData.Get<UniversalCameraData>();
-                UniversalResourceData resourceData = frameData.Get<UniversalResourceData>();
-
-                // Setup pass inputs and outputs through the builder interface.
-                // Eg:
-                // builder.UseTexture(sourceTexture);
-                // TextureHandle destination = UniversalRenderer.CreateRenderGraphTexture(renderGraph, cameraData.cameraTargetDescriptor, "Destination Texture", false);
-
-                // This sets the render target of the pass to the active color texture. Change it to your own render target as needed.
-                builder.SetRenderAttachment(resourceData.activeColorTexture, 0);
-
-                // Assigns the ExecutePass function to the render pass delegate. This will be called by the render graph when executing the pass.
-                builder.SetRenderFunc((PassData data, RasterGraphContext context) => ExecutePass(data, context));
-            }
-        }
+        // Call Setup on the render pass and transfer the compute shader.
+        m_ComputePass.Setup(computeShader);
+        // Enqueue the compute pass.
+        renderer.EnqueuePass(m_ComputePass);
     }
 }
+
+
