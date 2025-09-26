@@ -68,7 +68,7 @@ MonoBehaviour:
   m_Name: OutputTextureRendererFeature
   m_EditorClassIdentifier: Assembly-CSharp::OutputTextureRendererFeature
   m_Active: 1
-  m_PassEvent: 500
-  m_TextureName: _InputTexture
-  m_TextureType: 0
-  m_Material: {fileID: -876546973899608171, guid: 8f6a40d408f23e64e93e507e222c517e, type: 3}
+  m_PassEvent: 300
+  m_TextureName: _MyTexture
+  m_TextureType: 2
+  m_Material: {fileID: -876546973899608171, guid: 72b9ab08052b84cb0a55cdf696fbc87e, type: 3}

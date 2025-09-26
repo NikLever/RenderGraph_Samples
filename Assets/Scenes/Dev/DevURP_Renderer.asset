@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: DevRenderFeature
   m_EditorClassIdentifier: Assembly-CSharp::DevRenderFeature
   m_Active: 1
+  computeShader: {fileID: 7200000, guid: e0a62cf8f93b4da439ba6c1df01269a4, type: 3}
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
