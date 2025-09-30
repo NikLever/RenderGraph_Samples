@@ -293,7 +293,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 4448032d1b42242bd8cbb7762494e423, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -1.46396
+      value: -1.4639599
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 4448032d1b42242bd8cbb7762494e423, type: 3}
       propertyPath: m_LocalPosition.z
@@ -305,15 +305,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 4448032d1b42242bd8cbb7762494e423, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 4448032d1b42242bd8cbb7762494e423, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 4448032d1b42242bd8cbb7762494e423, type: 3}
       propertyPath: m_LocalRotation.z
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 4448032d1b42242bd8cbb7762494e423, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -327,9 +327,25 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -8464580074970640350, guid: 4448032d1b42242bd8cbb7762494e423, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: -6974486155112303311, guid: 4448032d1b42242bd8cbb7762494e423, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 4448032d1b42242bd8cbb7762494e423, type: 3}
       propertyPath: m_Name
       value: small-room-baked
+      objectReference: {fileID: 0}
+    - target: {fileID: 5873001294142176619, guid: 4448032d1b42242bd8cbb7762494e423, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 6905812023896243737, guid: 4448032d1b42242bd8cbb7762494e423, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 8746490631814701752, guid: 4448032d1b42242bd8cbb7762494e423, type: 3}
       propertyPath: m_CastShadows
@@ -369,7 +385,7 @@ Light:
   serializedVersion: 12
   m_Type: 1
   m_Color: {r: 0.99264705, g: 0.95036393, b: 0.83937067, a: 1}
-  m_Intensity: 1
+  m_Intensity: 0
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.802082

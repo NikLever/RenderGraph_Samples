@@ -48,7 +48,7 @@ MonoBehaviour:
     failOperation: 0
     zFailOperation: 0
   m_ShadowTransparentReceive: 1
-  m_RenderingMode: 0
+  m_RenderingMode: 2
   m_DepthPrimingMode: 0
   m_CopyDepthMode: 1
   m_DepthAttachmentFormat: 0
@@ -70,4 +70,4 @@ MonoBehaviour:
   m_Active: 1
   m_LayerMask:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 64
