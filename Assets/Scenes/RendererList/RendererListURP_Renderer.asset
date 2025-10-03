@@ -54,7 +54,7 @@ MonoBehaviour:
   m_DepthAttachmentFormat: 0
   m_DepthTextureFormat: 0
   m_AccurateGbufferNormals: 0
-  m_ObsoleteIntermediateTextureMode: 1
+  m_IntermediateTextureMode: 1
 --- !u!114 &5765953952044255405
 MonoBehaviour:
   m_ObjectHideFlags: 0

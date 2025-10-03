@@ -25,7 +25,7 @@ Shader "FrameBufferFetch"
                UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
 
                // read the current pixel from the framebuffer
-               float2 uv = input.texcoord.xy;
+               //float2 uv = input.texcoord.xy;
                // read previous subpasses directly from the framebuffer.
                half4 color = LOAD_FRAMEBUFFER_INPUT(0, input.positionCS.xy);
                
@@ -61,7 +61,7 @@ Shader "FrameBufferFetch"
                UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
 
                // read the current pixel from the framebuffer
-               float2 uv = input.texcoord.xy;
+               //float2 uv = input.texcoord.xy;
                // read previous subpasses directly from the framebuffer.
                half4 color = LOAD_FRAMEBUFFER_INPUT_MS(0, sampleID, input.positionCS.xy);
                
