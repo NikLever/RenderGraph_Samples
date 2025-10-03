@@ -29,8 +29,12 @@ Shader "FrameBufferFetch"
                // read previous subpasses directly from the framebuffer.
                half4 color = LOAD_FRAMEBUFFER_INPUT(0, input.positionCS.xy);
                
+               // Weighted luminance method
+               half gray = 0.299 * color.r + 0.587 * color.g + 0.114 * color.b;
+               color.r = color.g = color.b = gray;
+
                // Modify the sampled color
-               return half4(0,0,1,1) * color;
+               return half4(0.2,0.2,1,1) * color;
            }
 
            ENDHLSL
