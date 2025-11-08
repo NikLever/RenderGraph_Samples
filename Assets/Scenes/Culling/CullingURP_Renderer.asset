@@ -70,4 +70,4 @@ MonoBehaviour:
   m_Active: 1
   m_LayerMask:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 192
