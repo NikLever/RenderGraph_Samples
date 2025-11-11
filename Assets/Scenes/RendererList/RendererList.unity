@@ -331,6 +331,10 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 6
       objectReference: {fileID: 0}
+    - target: {fileID: -6986661168045500532, guid: 4448032d1b42242bd8cbb7762494e423, type: 3}
+      propertyPath: m_Layer
+      value: 7
+      objectReference: {fileID: 0}
     - target: {fileID: -6974486155112303311, guid: 4448032d1b42242bd8cbb7762494e423, type: 3}
       propertyPath: m_Layer
       value: 6
@@ -338,6 +342,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 4448032d1b42242bd8cbb7762494e423, type: 3}
       propertyPath: m_Name
       value: small-room-baked
+      objectReference: {fileID: 0}
+    - target: {fileID: 2100262850634027255, guid: 4448032d1b42242bd8cbb7762494e423, type: 3}
+      propertyPath: m_Layer
+      value: 7
       objectReference: {fileID: 0}
     - target: {fileID: 5873001294142176619, guid: 4448032d1b42242bd8cbb7762494e423, type: 3}
       propertyPath: m_Layer
